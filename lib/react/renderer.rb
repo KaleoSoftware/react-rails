@@ -43,10 +43,15 @@ module React
     end
 
     def render(component, args={})
+      if args.is_a?(Hash) && args.delete(:prerender) == :static
+        react_render_method = "renderToStaticMarkup"
+      else
+        react_render_method = "renderToString"
+      end
       react_props = React::Renderer.react_props(args)
       jscode = <<-JS
         (function () {
-          var result = React.renderToString(React.createElement(#{component}, #{react_props}));
+          var result = React.#{react_render_method}(React.createElement(#{component}, #{react_props}));
           #{@@replay_console ? React::Console.replay_as_script_js : ''}
           return result;
         })()
